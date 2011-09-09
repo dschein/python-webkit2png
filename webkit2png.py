@@ -437,13 +437,20 @@ if __name__ == '__main__':
         server_num = int(os.getpid() + 1e6)
         newArgs = ["xvfb-run", "--auto-servernum", "--server-num", str(server_num), "--server-args=-screen 0, %dx%dx24" % options.xvfb, sys.argv[0]]
         skipArgs = 0
-        for i in range(1, len(sys.argv)):
+        for arg in sys.argv[1:]: 
             if skipArgs > 0:
                 skipArgs -= 1
-            elif sys.argv[i] in ["-x", "--xvfb"]:
-                skipArgs = 2 # following: width and height
+                continue
+            is_x = arg.startswith('-x') 
+            is_xvfb = arg.startswith('--xvfb')
+            #xvfb option with no whitespace separating the value (-x1200 1200)
+            if is_x and arg[2:] or is_xvfb and arg[6:]:
+                skipArgs = 1
+            #xvfb option with whitespace separating the value (-x 1200 1200)
+            elif is_x or is_xvfb:
+                skipArgs = 2
             else:
-                newArgs.append(sys.argv[i])
+                newArgs.append(arg)
         logger.debug("Executing %s" % " ".join(newArgs))
         os.execvp(newArgs[0],newArgs[1:])
         
